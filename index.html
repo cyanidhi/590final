@@ -1,1333 +1,1496 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Cardiometabolic Health Dashboard (BRFSS 2015)</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+<meta charset="UTF-8" />
+<title>Cardiometabolic Health Dashboard (BRFSS 2015)</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- Font for clean, accessible typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Font for clean, accessible typography -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --bg: #f3f4f6;
-      --bg-panel: #ffffff;
-      --border-subtle: #e5e7eb;
-      --text-main: #111827;
-      --text-muted: #6b7280;
+<style>
+:root {
+  --bg: #f3f4f6;
+  --bg-panel: #ffffff;
+  --border-subtle: #e5e7eb;
+  --text-main: #111827;
+  --text-muted: #6b7280;
 
-      /* 5 blue-ish colors (Google/Material style) */
-      --blue-1: #0d47a1;
-      --blue-2: #1565c0;
-      --blue-3: #1976d2;
-      --blue-4: #1e88e5;
-      --blue-5: #42a5f5;
-      --accent: #1e88e5;
-    }
+  /* 5 blue-ish colors (Google/Material style) */
+  --blue-1: #0d47a1;
+  --blue-2: #1565c0;
+  --blue-3: #1976d2;
+  --blue-4: #1e88e5;
+  --blue-5: #42a5f5;
+  --accent: #1e88e5;
+}
 
-    * {
-      box-sizing: border-box;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #eef2ff;
-      color: var(--text-main);
-    }
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #eef2ff;
+  color: var(--text-main);
+}
 
-    main {
-      max-width: 1280px;
-      margin: 1rem auto 2rem;
-      padding: 1.5rem 1.75rem 2.5rem;
-      background: linear-gradient(to bottom, #f9fafb, #eef2ff);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-      border-radius: 1.25rem;
-    }
+main {
+  max-width: 1280px;
+  margin: 1rem auto 2rem;
+  padding: 1.5rem 1.75rem 2.5rem;
+  background: linear-gradient(to bottom, #f9fafb, #eef2ff);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  border-radius: 1.25rem;
+}
 
-    h1 {
-      margin: 0 0 0.25rem;
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 
-    p {
-      margin: 0;
-    }
+p {
+  margin: 0;
+}
 
-    .subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      max-width: 820px;
-      margin-bottom: 0.8rem;
-    }
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 820px;
+  margin-bottom: 0.8rem;
+}
 
-    /* Top tabs ------------------------------------------------------------ */
+/* Top tabs ------------------------------------------------------------ */
 
-    .tabs-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      margin-top: 0.25rem;
-    }
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  margin-top: 0.25rem;
+}
 
-    .tab-buttons {
-      display: inline-flex;
-      border-radius: 999px;
-      background: #e5e7eb;
-      padding: 0.18rem;
-    }
+.tab-buttons {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #e5e7eb;
+  padding: 0.18rem;
+}
 
-    .tab-button {
-      border: none;
-      background: transparent;
-      padding: 0.25rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: background 0.18s ease, color 0.18s ease;
-    }
+.tab-button {
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
 
-    .tab-button.active {
-      background: var(--accent);
-      color: #ffffff;
-    }
+.tab-button.active {
+  background: var(--accent);
+  color: #ffffff;
+}
 
-    /* Two-column dashboard layout (sidebar + main panel) ------------------ */
+/* Two-column dashboard layout (sidebar + main panel) ------------------ */
 
-    .dashboard {
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-      gap: 0.75rem;
-      align-items: stretch;
-    }
+.dashboard {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
 
-    @media (max-width: 900px) {
-      .dashboard {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
-    /* Sidebar with filters / profile inputs ------------------------------- */
+/* Sidebar with filters / profile inputs ------------------------------- */
 
-    .sidebar {
-      background: #f9fafb;
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-subtle);
-      padding: 0.75rem 0.8rem;
-    }
+.sidebar {
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  padding: 0.75rem 0.8rem;
+}
 
-    .sidebar h2 {
-      font-size: 0.95rem;
-      margin: 0 0 0.4rem;
-      font-weight: 600;
-    }
+.sidebar h2 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
 
-    .sidebar-group {
-      margin-bottom: 0.75rem;
-    }
+.sidebar-group {
+  margin-bottom: 0.75rem;
+}
 
-    .sidebar label {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 0.2rem;
-    }
+.sidebar label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
 
-    select,
-    input[type="number"] {
-      width: 100%;
-      border-radius: 0.45rem;
-      border: 1px solid #d1d5db;
-      padding: 0.3rem 0.55rem;
-      font-size: 0.8rem;
-      color: var(--text-main);
-      background: #f9fafb;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
+select,
+input[type="number"] {
+  width: 100%;
+  border-radius: 0.45rem;
+  border: 1px solid #d1d5db;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.8rem;
+  color: var(--text-main);   /* keep text black */
+  background: #f9fafb;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
 
-    select:focus,
-    input[type="number"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
-      background: #ffffff;
-    }
+select:focus,
+input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+  background: #ffffff;
+}
 
-    select.placeholder,
-    input.placeholder {
-      color: #9ca3af;
-    }
+.sidebar-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
 
-    .sidebar-note {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
+/* Toggle switch for confidence intervals */
+.ci-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
 
-    /* Main content panel -------------------------------------------------- */
+/* Base switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
 
-    .main-panel {
-      background: var(--bg-panel);
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-subtle);
-      padding: 0.75rem 0.9rem 0.8rem;
-    }
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
 
-    /* KPI / summary style ------------------------------------------------- */
+/* Slider background */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
 
-    .kpi-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 0.45rem;
-    }
+/* Slider knob */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  top: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  transition: transform 0.2s ease;
+}
 
-    .kpi-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
+/* Checked state */
+.switch input:checked + .slider {
+  background-color: var(--accent);
+}
 
-    .kpi-subtitle {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+.switch input:checked + .slider:before {
+  transform: translateX(16px);
+}
 
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
+/* Main content panel -------------------------------------------------- */
 
-    .kpi-card {
-      background: #eff6ff;
-      border-radius: 0.5rem;
-      padding: 0.45rem 0.55rem;
-      font-size: 0.8rem;
-    }
+.main-panel {
+  background: var(--bg-panel);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  padding: 0.75rem 0.9rem 0.8rem;
+}
 
-    .kpi-label {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-    }
+/* KPI / summary style ------------------------------------------------- */
 
-    .kpi-value {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--blue-2);
-    }
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
 
-    /* Charts area (General Statistics tab) -------------------------------- */
+.kpi-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
 
-    .charts-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr);
-      gap: 0.75rem;
-    }
+.kpi-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
 
-    .charts-grid-rows {
-      display: grid;
-      grid-template-rows: 260px 260px; /* slightly taller for race + age charts */
-      gap: 0.75rem;
-    }
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 
-    @media (max-width: 900px) {
-      .charts-grid,
-      .charts-grid-rows {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: none; /* grow naturally on small screens */
-      }
-    }
+.kpi-card {
+  background: #eff6ff;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.8rem;
+}
 
-    .chart-panel {
-      border-radius: 0.5rem;
-      border: 1px solid var(--border-subtle);
-      padding: 0.45rem 0.55rem 0.3rem;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-    }
+.kpi-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
 
-    .chart-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      margin-bottom: 0.1rem;
-    }
+.kpi-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--blue-2);
+}
 
-    .chart-subtitle {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-      margin-bottom: 0.25rem;
-    }
+/* CI toggle ----------------------------------------------------------- */
 
-    .chart {
-      flex: 1;
-      min-height: 0;
-    }
+.ci-toggle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
 
-    svg {
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-    }
+.ci-toggle input {
+  accent-color: var(--accent);
+}
 
-    /* Profile summary + personalized area -------------------------------- */
+/* Charts area (General Statistics tab) -------------------------------- */
 
-    .profile-summary {
-      margin-top: 0.5rem;
-      font-size: 0.86rem;
-      line-height: 1.5;
-      color: var(--text-main);
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
+.charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr);
+  gap: 0.75rem;
+}
 
-    .profile-summary.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.charts-grid-rows {
+  display: grid;
+  grid-template-rows: 260px 260px; /* slightly taller for race + age charts */
+  gap: 0.75rem;
+}
 
-    .profile-summary strong.highlight {
-      color: var(--blue-1);
-      font-weight: 700;
-    }
+@media (max-width: 900px) {
+  .charts-grid,
+  .charts-grid-rows {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none; /* grow naturally on small screens */
+  }
+}
 
-    .profile-summary em {
-      color: var(--text-muted);
-      font-style: normal;
-    }
+.chart-panel {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  padding: 0.45rem 0.55rem 0.3rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
 
-    /* Personalized mini-chart block (fades in with profile) -------------- */
+.chart-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
 
-    .profile-personalized {
-      margin-top: 0.5rem;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
+.chart-subtitle {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
 
-    .profile-personalized.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.chart {
+  flex: 1;
+  min-height: 0;
+}
 
-    /* Tabs content ------------------------------------------------------- */
+svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
 
-    .tab-section {
-      display: none;
-    }
+/* Profile summary + personalized area -------------------------------- */
 
-    .tab-section.active {
-      display: block;
-    }
+.profile-summary {
+  margin-top: 0.5rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text-main);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
 
-    /* Notes block -------------------------------------------------------- */
+.profile-summary.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-    .notes {
-      margin-top: 0.75rem;
-      padding-top: 0.5rem;
-      font-size: 0.76rem;
-      color: var(--text-muted);
-      border-top: 1px solid #e5e7eb;
-    }
+.profile-summary strong.highlight {
+  color: var(--blue-1);
+  font-weight: 700;
+}
 
-    .notes ul {
-      padding-left: 1.1rem;
-      margin: 0.2rem 0 0;
-    }
+.profile-summary em {
+  color: var(--text-muted);
+  font-style: normal;
+}
 
-    .notes li {
-      margin-bottom: 0.15rem;
-    }
-  </style>
+/* Personalized mini-chart block (fades in with profile) -------------- */
+
+.profile-personalized {
+  margin-top: 0.5rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.profile-personalized.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Tabs content ------------------------------------------------------- */
+
+.tab-section {
+  display: none;
+}
+
+.tab-section.active {
+  display: block;
+}
+
+/* Notes block -------------------------------------------------------- */
+
+.notes {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  border-top: 1px solid #e5e7eb;
+}
+
+.notes ul {
+  padding-left: 1.1rem;
+  margin: 0.2rem 0 0;
+}
+
+.notes li {
+  margin-bottom: 0.15rem;
+}
+</style>
 </head>
 <body>
-  <main>
-    <h1>Cardiometabolic Health &amp; Disparities (BRFSS&nbsp;2015)</h1>
-    <p class="subtitle">
-      Use this tool to make health statistics more accessible. Explore how
-      <strong>diabetes, high blood pressure, high cholesterol, heart disease,</strong>
-      and <strong>stroke</strong> vary across race/ethnicity, age, BMI, income, and education.
-      Start on the <strong>Your Profile</strong> tab, then switch to <strong>General Statistics</strong>
-      to see population patterns.
-    </p>
+<main>
+<h1>Cardiometabolic Health &amp; Disparities (BRFSS&nbsp;2015)</h1>
+<p class="subtitle">
+  Use this tool to make health statistics more accessible. Explore how
+  <strong>diabetes, high blood pressure, high cholesterol, heart disease,</strong>
+  and <strong>stroke</strong> vary across race/ethnicity, age, BMI, income, and education.
+  Start on the <strong>Your Profile</strong> tab, then switch to <strong>General Statistics</strong>
+  to see population patterns.
+</p>
 
-    <!-- Tab buttons: Your Profile / General Statistics -->
-    <div class="tabs-bar">
-      <div class="tab-buttons">
-        <button class="tab-button active" data-tab="profile-tab">Your Profile</button>
-        <button class="tab-button" data-tab="stats-tab">General Statistics</button>
+<!-- Tab buttons: Your Profile / General Statistics -->
+<div class="tabs-bar">
+  <div class="tab-buttons">
+    <button class="tab-button active" data-tab="profile-tab">Your Profile</button>
+    <button class="tab-button" data-tab="stats-tab">General Statistics</button>
+  </div>
+</div>
+
+<!-- TAB 1: YOUR PROFILE ---------------------------------------------->
+<section id="profile-tab" class="tab-section active">
+  <div class="dashboard">
+    <!-- Sidebar with personalized inputs -->
+    <aside class="sidebar">
+      <h2>Your Information</h2>
+
+      <div class="sidebar-group">
+        <label for="profile-condition">Health Issue</label>
+        <select id="profile-condition">
+          <option value="">Choose a health issue…</option>
+        </select>
       </div>
-    </div>
 
-    <!-- TAB 1: YOUR PROFILE ---------------------------------------------->
-    <section id="profile-tab" class="tab-section active">
-      <div class="dashboard">
-        <!-- Sidebar with personalized inputs -->
-        <aside class="sidebar">
-          <h2>Your Information</h2>
+      <div class="sidebar-group">
+        <label for="profile-age">Age Group</label>
+        <select id="profile-age">
+          <option value="">Choose an age group…</option>
+        </select>
+      </div>
 
-          <div class="sidebar-group">
-            <label for="profile-condition">Health Issue</label>
-            <select id="profile-condition" class="placeholder">
-              <option value="">Choose a health issue…</option>
-            </select>
+      <div class="sidebar-group">
+        <label for="profile-sex">Sex</label>
+        <select id="profile-sex">
+          <option value="">Choose sex…</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="profile-race">Race / Ethnicity</label>
+        <select id="profile-race">
+          <option value="">Choose race / ethnicity…</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="profile-bmi">BMI (Approx.)</label>
+        <input
+          id="profile-bmi"
+          type="number"
+          min="10"
+          max="80"
+          step="0.1"
+          placeholder="e.g., 27"
+        />
+      </div>
+
+      <div class="sidebar-group">
+        <label for="profile-income">Income</label>
+        <select id="profile-income">
+          <option value="">Choose income…</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="profile-education">Education</label>
+        <select id="profile-education">
+          <option value="">Choose education…</option>
+        </select>
+      </div>
+
+      <p class="sidebar-note">
+        All fields must be filled in before your personalized estimate appears.
+        No values are stored; this is an educational information visualization, not medical advice.
+      </p>
+    </aside>
+
+    <!-- Main personalized KPIs + explanation + mini-chart -->
+    <section class="main-panel">
+      <div class="kpi-header">
+        <div>
+          <div class="kpi-title">Your Profile vs. People Like You</div>
+          <div class="kpi-subtitle" id="profile-kpi-subtitle">
+            Choose a health issue and fill in the panel on the left to see your estimated risk.
           </div>
+        </div>
+      </div>
 
-          <div class="sidebar-group">
-            <label for="profile-age">Age Group</label>
-            <select id="profile-age" class="placeholder">
-              <option value="">Choose an age group…</option>
-            </select>
+      <!-- KPIs for your profile group -->
+      <div class="kpi-row" id="profile-kpis">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Personalized mini chart (fades in with complete profile) -->
+      <div class="profile-personalized" id="profile-mini-card">
+        <div class="chart-panel">
+          <div class="chart-title">How Your Group Compares</div>
+          <div class="chart-subtitle" id="profile-mini-subtitle">
+            Your profile group vs. your race/ethnicity group vs. all adults (for the selected condition).
           </div>
+          <div class="chart" id="profile-mini-chart"></div>
+        </div>
+      </div>
 
-          <div class="sidebar-group">
-            <label for="profile-sex">Sex</label>
-            <select id="profile-sex" class="placeholder">
-              <option value="">Choose sex…</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
+      <!-- Text explanation of what this means -->
+      <div class="profile-summary" id="profile-summary">
+        <!-- Filled dynamically -->
+      </div>
 
-          <div class="sidebar-group">
-            <label for="profile-race">Race / Ethnicity</label>
-            <select id="profile-race" class="placeholder">
-              <option value="">Choose race / ethnicity…</option>
-            </select>
-          </div>
-
-          <div class="sidebar-group">
-            <label for="profile-bmi">BMI (Approx.)</label>
-            <input
-              id="profile-bmi"
-              type="number"
-              min="10"
-              max="80"
-              step="0.1"
-              placeholder="e.g., 27"
-              class="placeholder"
-            />
-          </div>
-
-          <div class="sidebar-group">
-            <label for="profile-income">Income</label>
-            <select id="profile-income" class="placeholder">
-              <option value="">Choose income…</option>
-            </select>
-          </div>
-
-          <div class="sidebar-group">
-            <label for="profile-education">Education</label>
-            <select id="profile-education" class="placeholder">
-              <option value="">Choose education…</option>
-            </select>
-          </div>
-
-          <p class="sidebar-note">
-            All fields must be filled in before your personalized estimate appears.
-            No values are stored; this is an educational information visualization, not medical advice.
-          </p>
-        </aside>
-
-        <!-- Main personalized KPIs + explanation + mini-chart -->
-        <section class="main-panel">
-          <div class="kpi-header">
-            <div>
-              <div class="kpi-title">Your Profile vs. People Like You</div>
-              <div class="kpi-subtitle" id="profile-kpi-subtitle">
-                Choose a health issue and fill in the panel on the left to see your estimated risk.
-              </div>
-            </div>
-          </div>
-
-          <!-- KPIs for your profile group -->
-          <div class="kpi-row" id="profile-kpis">
-            <!-- Filled dynamically -->
-          </div>
-
-          <!-- Personalized mini chart (fades in with complete profile) -->
-          <div class="profile-personalized" id="profile-mini-card">
-            <div class="chart-panel">
-              <div class="chart-title">How Your Group Compares</div>
-              <div class="chart-subtitle" id="profile-mini-subtitle">
-                Your profile group vs. your race/ethnicity group vs. all adults (for the selected condition).
-              </div>
-              <div class="chart" id="profile-mini-chart"></div>
-            </div>
-          </div>
-
-          <!-- Text explanation of what this means -->
-          <div class="profile-summary" id="profile-summary">
-            <!-- Filled dynamically -->
-          </div>
-
-          <div class="notes">
-            <strong>How this visualization works:</strong>
-            <ul>
-              <li>
-                We find adults in BRFSS 2015 with the same race, sex, age group, income, education,
-                and BMI within ±3 points.
-              </li>
-              <li>
-                Your estimate is the share of that group who report the selected condition. This is a
-                visualization of sample data, not a diagnosis.
-              </li>
-              <li>
-                We also compare to all adults of your race/ethnicity to highlight disparities in the data.
-              </li>
-            </ul>
-          </div>
-        </section>
+      <div class="notes">
+        <strong>How this visualization works:</strong>
+        <ul>
+          <li>
+            We find adults in BRFSS 2015 with the same race, sex, age group, income, education,
+            and BMI within ±3 points.
+          </li>
+          <li>
+            Your estimate is the share of that group who report the selected condition. This is a
+            visualization of sample data, not a diagnosis.
+          </li>
+          <li>
+            We also compare to all adults of your race/ethnicity to highlight disparities in the data.
+          </li>
+        </ul>
       </div>
     </section>
+  </div>
+</section>
 
-    <!-- TAB 2: GENERAL STATISTICS ---------------------------------------->
-    <section id="stats-tab" class="tab-section">
-      <div class="dashboard">
-        <!-- Sidebar with dashboard filters -->
-        <aside class="sidebar">
-          <h2>Dashboard Filters</h2>
+<!-- TAB 2: GENERAL STATISTICS ---------------------------------------->
+<section id="stats-tab" class="tab-section">
+  <div class="dashboard">
+    <!-- Sidebar with dashboard filters -->
+    <aside class="sidebar">
+      <h2>Dashboard Filters</h2>
 
-          <div class="sidebar-group">
-            <label for="stats-condition">Health Issue</label>
-            <select id="stats-condition" class="placeholder">
-              <option value="">Choose a health issue…</option>
-            </select>
+      <div class="sidebar-group">
+        <label for="stats-condition">Health Issue</label>
+        <select id="stats-condition">
+          <option value="">Choose a health issue…</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="stats-race-filter">Race / Ethnicity</label>
+        <select id="stats-race-filter">
+          <option value="all">All races</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="stats-sex-filter">Sex</label>
+        <select id="stats-sex-filter">
+          <option value="all">All sexes</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="stats-income-filter">Income</label>
+        <select id="stats-income-filter">
+          <option value="all">All incomes</option>
+        </select>
+      </div>
+
+      <div class="sidebar-group">
+        <label for="stats-education-filter">Education</label>
+        <select id="stats-education-filter">
+          <option value="all">All education levels</option>
+        </select>
+      </div>
+
+      <p class="sidebar-note">
+        Filters apply to the charts on the right. Use them to focus on particular subgroups,
+        then compare patterns across race/ethnicity, age, and BMI. Bars related to your profile
+        are highlighted when relevant.
+      </p>
+    </aside>
+
+    <!-- Main KPIs + general charts -->
+    <section class="main-panel">
+      <div class="kpi-header">
+        <div>
+          <div class="kpi-title">General Statistics</div>
+          <div class="kpi-subtitle" id="stats-kpi-subtitle">
+            Select a health issue to view prevalence and disparities in the filtered population.
           </div>
+<div class="ci-toggle-wrap">
+  <label class="switch">
+    <input type="checkbox" id="ci-toggle" checked aria-label="Show 95% confidence intervals">
+    <span class="slider"></span>
+  </label>
+  <span>Show 95% confidence intervals</span>
+</div>
 
-          <div class="sidebar-group">
-            <label for="stats-race-filter">Race / Ethnicity</label>
-            <select id="stats-race-filter">
-              <option value="all">All races</option>
-            </select>
-          </div>
+      <!-- High-level KPIs for filtered population -->
+      <div class="kpi-row" id="stats-kpis">
+        <!-- Filled dynamically -->
+      </div>
 
-          <div class="sidebar-group">
-            <label for="stats-sex-filter">Sex</label>
-            <select id="stats-sex-filter">
-              <option value="all">All sexes</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
-
-          <div class="sidebar-group">
-            <label for="stats-income-filter">Income</label>
-            <select id="stats-income-filter">
-              <option value="all">All incomes</option>
-            </select>
-          </div>
-
-          <div class="sidebar-group">
-            <label for="stats-education-filter">Education</label>
-            <select id="stats-education-filter">
-              <option value="all">All education levels</option>
-            </select>
-          </div>
-
-          <p class="sidebar-note">
-            Filters apply to the charts on the right. Use them to focus on particular subgroups,
-            then compare patterns across race/ethnicity, age, and BMI. Bars related to your profile
-            are highlighted when relevant.
-          </p>
-        </aside>
-
-        <!-- Main KPIs + general charts -->
-        <section class="main-panel">
-          <div class="kpi-header">
-            <div>
-              <div class="kpi-title">General Statistics</div>
-              <div class="kpi-subtitle" id="stats-kpi-subtitle">
-                Select a health issue to view prevalence and disparities in the filtered population.
-              </div>
+      <!-- Charts: race + age in first column, BMI in second column -->
+      <div class="charts-grid" style="margin-top:0.2rem;">
+        <div class="charts-grid-rows">
+          <div class="chart-panel">
+            <div class="chart-title">Prevalence by Race / Ethnicity</div>
+            <div class="chart-subtitle">
+              Bar chart (one bar per race group), ordered by prevalence. Your race is highlighted when applicable.
             </div>
+            <div class="chart" id="stats-race-chart"></div>
           </div>
 
-          <!-- High-level KPIs for filtered population -->
-          <div class="kpi-row" id="stats-kpis">
-            <!-- Filled dynamically -->
-          </div>
-
-          <!-- Charts: race + age in first column, BMI in second column -->
-          <div class="charts-grid" style="margin-top:0.2rem;">
-            <div class="charts-grid-rows">
-              <div class="chart-panel">
-                <div class="chart-title">Prevalence by Race / Ethnicity</div>
-                <div class="chart-subtitle">
-                  Bar chart (one bar per race group), ordered by prevalence. Your race is highlighted when applicable.
-                </div>
-                <div class="chart" id="stats-race-chart"></div>
-              </div>
-
-              <div class="chart-panel">
-                <div class="chart-title">Prevalence by Age Group</div>
-                <div class="chart-subtitle">
-                  Bar chart over ordered age groups (18–24, 25–29, …, 80+). Your age group is highlighted when applicable.
-                </div>
-                <div class="chart" id="stats-age-chart"></div>
-              </div>
+          <div class="chart-panel">
+            <div class="chart-title">Prevalence by Age Group</div>
+            <div class="chart-subtitle">
+              Bar chart over ordered age groups (18–24, 25–29, …, 80+). Your age group is highlighted when applicable.
             </div>
-
-            <div class="chart-panel">
-              <div class="chart-title">Prevalence by BMI Category</div>
-              <div class="chart-subtitle">
-                Bar chart for underweight, normal, overweight, and obese adults. (BMI categories come from BRFSS.)
-              </div>
-              <div class="chart" id="stats-bmi-chart"></div>
-            </div>
+            <div class="chart" id="stats-age-chart"></div>
           </div>
+        </div>
 
-          <div class="notes">
-            <strong>Notes on this visualization:</strong>
-            <ul>
-              <li>All estimates are unweighted BRFSS 2015 proportions and should be interpreted as approximate.</li>
-              <li>The same health issue is used across all charts to make comparisons easier.</li>
-              <li>
-                Bar charts are used because each group (race, age category, BMI category) is categorical. This follows
-                information visualization best practices for comparing groups.
-              </li>
-              <li>
-                Click a bar in a chart to focus on that group. Click again to return to the full set of groups.
-              </li>
-            </ul>
+        <div class="chart-panel">
+          <div class="chart-title">Prevalence by BMI Category</div>
+          <div class="chart-subtitle">
+            Bar chart for underweight, normal, overweight, and obese adults. (BMI categories come from BRFSS.)
           </div>
-        </section>
+          <div class="chart" id="stats-bmi-chart"></div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <strong>Notes on this visualization:</strong>
+        <ul>
+          <li>All estimates are unweighted BRFSS 2015 proportions and should be interpreted as approximate.</li>
+          <li>The same health issue is used across all charts to make comparisons easier.</li>
+          <li>
+            Bar charts are used because each group (race, age category, BMI category) is categorical. This follows
+            information visualization best practices for comparing groups.
+          </li>
+          <li>
+            Click a bar in a chart to focus on that group. Click again to return to the full set of groups.
+          </li>
+        </ul>
       </div>
     </section>
-  </main>
+  </div>
+</section>
+</main>
 
-  <script>
-    // ---------------------------------------------------------------------
-    // Configuration: labels, order, colors
-    // ---------------------------------------------------------------------
-    const conditionLabels = {
-      diabetes: "Diabetes",
-      high_bp: "High Blood Pressure",
-      high_chol: "High Cholesterol",
-      heart_disease: "Heart Disease / Heart Attack",
-      stroke: "Stroke",
-    };
+<script>
+// ---------------------------------------------------------------------
+// Configuration: labels, order, colors
+// ---------------------------------------------------------------------
+const conditionLabels = {
+  diabetes: "Diabetes",
+  high_bp: "High Blood Pressure",
+  high_chol: "High Cholesterol",
+  heart_disease: "Heart Disease / Heart Attack",
+  stroke: "Stroke",
+};
 
-    const conditionOrder = ["diabetes", "high_bp", "high_chol", "heart_disease", "stroke"];
+const conditionOrder = ["diabetes", "high_bp", "high_chol", "heart_disease", "stroke"];
 
-    // Palette for bars and highlights (all in the blue family)
-    const bluePalette = ["#0d47a1", "#1565c0", "#1976d2", "#1e88e5", "#42a5f5"];
+// Palette for bars and highlights (all in the blue family)
+const bluePalette = ["#0d47a1", "#1565c0", "#1976d2", "#1e88e5", "#42a5f5"];
 
-    // Stores which group is "focused" (clicked) in each chart
-    const focusState = {
-      race: null,
-      age: null,
-      bmi: null,
-    };
+// Stores which group is "focused" (clicked) in each chart
+const focusState = {
+  race: null,
+  age: null,
+  bmi: null,
+};
 
-    // ---------------------------------------------------------------------
-    // Tabs: switch between "Your Profile" and "General Statistics"
-    // ---------------------------------------------------------------------
-    document.querySelectorAll(".tab-button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const target = btn.dataset.tab;
-        document.querySelectorAll(".tab-button").forEach((b) =>
-          b.classList.toggle("active", b === btn)
-        );
-        document.querySelectorAll(".tab-section").forEach((sec) => {
-          sec.classList.toggle("active", sec.id === target);
-        });
-      });
+// Global flag for CI toggle
+let showCI = false;
+
+// ---------------------------------------------------------------------
+// Tabs: switch between "Your Profile" and "General Statistics"
+// ---------------------------------------------------------------------
+document.querySelectorAll(".tab-button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll(".tab-button").forEach((b) =>
+      b.classList.toggle("active", b === btn)
+    );
+    document.querySelectorAll(".tab-section").forEach((sec) => {
+      sec.classList.toggle("active", sec.id === target);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------
+// Load BRFSS data and build the visualization
+// ---------------------------------------------------------------------
+d3.csv("brfss2015_health_clean.csv")
+  .then((raw) => {
+    // Parse and clean one row of BRFSS data into a friendly object
+    const data = raw.map((d) => ({
+      race: d.race || null,
+      sex: d.sex || null,
+      age_group: d.age_group || null,
+      age_num: d.age_num ? +d.age_num : null,
+      bmi: d.bmi ? +d.bmi : null,
+      bmi_cat: d.bmi_cat || null,
+      education: d.education || null,
+      income: d.income || null,
+      diabetes: d.diabetes === "" ? null : +d.diabetes,
+      high_bp: d.high_bp === "" ? null : +d.high_bp,
+      high_chol: d.high_chol === "" ? null : +d.high_chol,
+      heart_disease: d.heart_disease === "" ? null : +d.heart_disease,
+      stroke: d.stroke === "" ? null : +d.stroke,
+    }));
+
+    // Unique categorical values used to populate dropdowns
+    const races = Array.from(new Set(data.map((d) => d.race))).filter(Boolean).sort();
+    const incomes = Array.from(new Set(data.map((d) => d.income))).filter(Boolean);
+    const educations = Array.from(new Set(data.map((d) => d.education))).filter(Boolean);
+    const ageGroups = Array.from(new Set(data.map((d) => d.age_group))).filter(Boolean);
+
+    // -----------------------------------------------------------------
+    // Populate dropdowns in both tabs
+    // -----------------------------------------------------------------
+
+    // Profile tab dropdowns
+    const profileRace = d3.select("#profile-race");
+    races.forEach((r) => profileRace.append("option").attr("value", r).text(r));
+
+    const profileAge = d3.select("#profile-age");
+    ageGroups.forEach((a) => profileAge.append("option").attr("value", a).text(a));
+
+    const profileIncome = d3.select("#profile-income");
+    incomes.forEach((v) => profileIncome.append("option").attr("value", v).text(v));
+
+    const profileEducation = d3.select("#profile-education");
+    educations.forEach((v) => profileEducation.append("option").attr("value", v).text(v));
+
+    const profileCond = d3.select("#profile-condition");
+    const statsCond = d3.select("#stats-condition");
+    conditionOrder.forEach((key) => {
+      profileCond.append("option").attr("value", key).text(conditionLabels[key]);
+      statsCond.append("option").attr("value", key).text(conditionLabels[key]);
     });
 
-    // ---------------------------------------------------------------------
-    // Load BRFSS data and build the visualization
-    // ---------------------------------------------------------------------
-    d3.csv("brfss2015_health_clean.csv")
-      .then((raw) => {
-        // Parse and clean one row of BRFSS data into a friendly object
-        const data = raw.map((d) => ({
-  race: d.race || null,
-  sex: d.sex || null,
-  age_group: d.age_group || null,
-  age_num: d.age_num ? +d.age_num : null,
-  bmi: d.bmi ? +d.bmi : null,
-  bmi_cat: d.bmi_cat || null,
-  education: d.education || null,
-  income: d.income || null,
-  diabetes: d.diabetes === "" ? null : +d.diabetes,
-  high_bp: d.high_bp === "" ? null : +d.high_bp,
-  high_chol: d.high_chol === "" ? null : +d.high_chol,
-  heart_disease: d.heart_disease === "" ? null : +d.heart_disease,
-  stroke: d.stroke === "" ? null : +d.stroke,
-}));
+    // General Statistics tab dropdowns
+    const statsRaceFilter = d3.select("#stats-race-filter");
+    races.forEach((r) => statsRaceFilter.append("option").attr("value", r).text(r));
 
-        // Unique categorical values used to populate dropdowns
-        const races = Array.from(new Set(data.map((d) => d.race))).filter(Boolean).sort();
-        const incomes = Array.from(new Set(data.map((d) => d.income))).filter(Boolean);
-        const educations = Array.from(new Set(data.map((d) => d.education))).filter(Boolean);
-        const ageGroups = Array.from(new Set(data.map((d) => d.age_group))).filter(Boolean);
+    const statsIncomeFilter = d3.select("#stats-income-filter");
+    incomes.forEach((v) => statsIncomeFilter.append("option").attr("value", v).text(v));
 
-        // -----------------------------------------------------------------
-        // Populate dropdowns in both tabs
-        // -----------------------------------------------------------------
+    const statsEducationFilter = d3.select("#stats-education-filter");
+    educations.forEach((v) => statsEducationFilter.append("option").attr("value", v).text(v));
 
-        // Profile tab dropdowns
-        const profileRace = d3.select("#profile-race");
-        races.forEach((r) => profileRace.append("option").attr("value", r).text(r));
+    // -----------------------------------------------------------------
+    // Helper: compute prevalence by group for a given condition
+    // (used in both general charts and personalized views)
+    // -----------------------------------------------------------------
+    function prevalenceBy(groupKey, cond, subset) {
+      const grouped = d3.group(subset, (d) => d[groupKey]);
+      const result = [];
+      for (const [key, values] of grouped.entries()) {
+        if (!key) continue;
+        const withCond = values.filter((v) => v[cond] === 1).length;
+        const total = values.length;
+        if (!total) continue;
+        result.push({ key, total, prevalence: withCond / total });
+      }
+      return result.sort((a, b) => a.prevalence - b.prevalence);
+    }
 
-        const profileAge = d3.select("#profile-age");
-        ageGroups.forEach((a) => profileAge.append("option").attr("value", a).text(a));
+    // -----------------------------------------------------------------
+    // Generic bar chart function
+    // - highlightKey: bar corresponding to the user’s profile (if any)
+    // - focusKeyName: which focusState property this chart should use
+    // -----------------------------------------------------------------
+    function drawBarChart(
+      containerId,
+      dataPoints,
+      {
+        yLabel = "",
+        rotateX = false,
+        highlightKey = null,
+        focusKeyName = null,
+      } = {}
+    ) {
+      const container = d3.select(containerId);
+      container.selectAll("*").remove();
 
-        const profileIncome = d3.select("#profile-income");
-        incomes.forEach((v) => profileIncome.append("option").attr("value", v).text(v));
+      const width = container.node().clientWidth || 400;
+      const height = container.node().clientHeight || 220;
+      const margin = { top: 16, right: 16, bottom: rotateX ? 80 : 40, left: 56 };
 
-        const profileEducation = d3.select("#profile-education");
-        educations.forEach((v) => profileEducation.append("option").attr("value", v).text(v));
+      const svg = container.append("svg").attr("width", width).attr("height", height);
 
-        const profileCond = d3.select("#profile-condition");
-        const statsCond = d3.select("#stats-condition");
-        conditionOrder.forEach((key) => {
-          profileCond.append("option").attr("value", key).text(conditionLabels[key]);
-          statsCond.append("option").attr("value", key).text(conditionLabels[key]);
-        });
+      if (!dataPoints.length) {
+        svg
+          .append("text")
+          .attr("x", width / 2)
+          .attr("y", height / 2)
+          .attr("text-anchor", "middle")
+          .attr("fill", "#9ca3af")
+          .text("Select a health issue to view this chart.");
+        return;
+      }
 
-        // General Statistics tab dropdowns
-        const statsRaceFilter = d3.select("#stats-race-filter");
-        races.forEach((r) => statsRaceFilter.append("option").attr("value", r).text(r));
+      const focusKey = focusKeyName ? focusState[focusKeyName] : null;
+      const basePoints = focusKey
+        ? dataPoints.filter((d) => d.key === focusKey)
+        : dataPoints;
 
-        const statsIncomeFilter = d3.select("#stats-income-filter");
-        incomes.forEach((v) => statsIncomeFilter.append("option").attr("value", v).text(v));
-
-        const statsEducationFilter = d3.select("#stats-education-filter");
-        educations.forEach((v) => statsEducationFilter.append("option").attr("value", v).text(v));
-
-        // -----------------------------------------------------------------
-        // Helper: compute prevalence by group for a given condition
-        //         (used in both general charts and personalized views)
-        // -----------------------------------------------------------------
-        function prevalenceBy(groupKey, cond, subset) {
-          const grouped = d3.group(subset, (d) => d[groupKey]);
-          const result = [];
-          for (const [key, values] of grouped.entries()) {
-            if (!key) continue;
-            const withCond = values.filter((v) => v[cond] === 1).length;
-            const total = values.length;
-            if (!total) continue;
-            result.push({ key, total, prevalence: withCond / total });
-          }
-          return result.sort((a, b) => a.prevalence - b.prevalence);
+      // Extend with CI if toggle is on
+      const points = basePoints.map((d) => {
+        if (!showCI || !d.total) {
+          return { ...d, ciLow: null, ciHigh: null };
         }
-
-        // -----------------------------------------------------------------
-        // Generic bar chart function
-        // - highlightKey: bar corresponding to the user’s profile (if any)
-        // - focusKeyName: which focusState property this chart should use
-        // -----------------------------------------------------------------
-        function drawBarChart(
-          containerId,
-          dataPoints,
-          {
-            yLabel = "",
-            rotateX = false,
-            highlightKey = null,
-            focusKeyName = null,
-          } = {}
-        ) {
-          const container = d3.select(containerId);
-          container.selectAll("*").remove();
-
-          const width = container.node().clientWidth || 400;
-          const height = container.node().clientHeight || 220;
-          const margin = { top: 10, right: 10, bottom: rotateX ? 80 : 40, left: 60 };
-
-          const svg = container.append("svg").attr("width", width).attr("height", height);
-
-          if (!dataPoints.length) {
-            svg
-              .append("text")
-              .attr("x", width / 2)
-              .attr("y", height / 2)
-              .attr("text-anchor", "middle")
-              .attr("fill", "#9ca3af")
-              .text("Select a health issue to view this chart.");
-            return;
-          }
-
-          const focusKey = focusKeyName ? focusState[focusKeyName] : null;
-          const points = focusKey
-            ? dataPoints.filter((d) => d.key === focusKey)
-            : dataPoints;
-
-          const x = d3.scaleBand()
-            .domain(points.map((d) => d.key))
-            .range([margin.left, width - margin.right])
-            .padding(0.25);
-
-          const maxPrev = d3.max(points, (d) => d.prevalence) || 0;
-          const y = d3.scaleLinear()
-            .domain([0, Math.min(0.8, maxPrev * 1.1)]) // cap at 80% where possible
-            .nice()
-            .range([height - margin.bottom, margin.top]);
-
-          const xAxis = (g) =>
-            g
-              .attr("transform", `translate(0,${height - margin.bottom})`)
-              .call(d3.axisBottom(x).tickSizeOuter(0))
-              .selectAll("text")
-              .style("font-size", "10px")
-              .attr("fill", "#4b5563")
-              .call((sel) => {
-                if (rotateX) {
-                  sel
-                    .attr("text-anchor", "end")
-                    .attr("transform", "rotate(-35)")
-                    .attr("dx", "-0.6em")
-                    .attr("dy", "0.25em");
-                }
-              });
-
-          const yAxis = (g) =>
-            g
-              .attr("transform", `translate(${margin.left},0)`)
-              .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d * 100 + "%"))
-              .selectAll("text")
-              .style("font-size", "10px")
-              .attr("fill", "#4b5563");
-
-          svg.append("g").call(xAxis);
-          svg.append("g").call(yAxis);
-
-          const bars = svg
-            .selectAll("rect.bar")
-            .data(points)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("x", (d) => x(d.key))
-            .attr("y", (d) => y(d.prevalence))
-            .attr("width", x.bandwidth())
-            .attr("height", (d) => y(0) - y(d.prevalence))
-            .attr("fill", (d) => {
-              const isHighlight = highlightKey && d.key === highlightKey;
-              return isHighlight ? bluePalette[0] : bluePalette[3];
-            })
-            .attr("opacity", (d) => {
-              if (!focusKey) return 1;
-              return d.key === focusKey ? 1 : 0.25;
-            });
-
-          // Clicking a bar focuses on that group; clicking again resets.
-          if (focusKeyName) {
-            bars
-              .style("cursor", "pointer")
-              .on("click", (_, d) => {
-                focusState[focusKeyName] =
-                  focusState[focusKeyName] === d.key ? null : d.key;
-                updateStats(); // redraw charts with new focus
-              });
-          }
-
-          svg
-            .append("text")
-            .attr("x", margin.left)
-            .attr("y", margin.top + 4)
-            .attr("fill", "#6b7280")
-            .attr("font-size", 10)
-            .text(yLabel);
-        }
-
-        // -----------------------------------------------------------------
-        // Small personalized chart for the profile tab
-        // Compares: your profile group vs. your race group vs. all adults
-        // -----------------------------------------------------------------
-        function drawProfileMiniChart(condLabel, raceLabel, profilePrev, baselinePrev, overallPrev) {
-          const card = d3.select("#profile-mini-card");
-          const container = d3.select("#profile-mini-chart");
-          container.selectAll("*").remove();
-
-          if (profilePrev == null && baselinePrev == null && overallPrev == null) {
-            // Nothing meaningful to show
-            card.classed("visible", false);
-            return;
-          }
-
-          const rows = [];
-          if (profilePrev != null) {
-            rows.push({ key: "Your profile group", prevalence: profilePrev });
-          }
-          if (baselinePrev != null) {
-            rows.push({
-              key: `All ${raceLabel} adults`,
-              prevalence: baselinePrev,
-            });
-          }
-          if (overallPrev != null) {
-            rows.push({ key: "All adults", prevalence: overallPrev });
-          }
-
-          const width = container.node().clientWidth || 400;
-          const height = container.node().clientHeight || 180;
-          const margin = { top: 10, right: 10, bottom: 40, left: 60 };
-
-          const svg = container.append("svg").attr("width", width).attr("height", height);
-
-          const x = d3.scaleBand()
-            .domain(rows.map((d) => d.key))
-            .range([margin.left, width - margin.right])
-            .padding(0.35);
-
-          const maxPrev = d3.max(rows, (d) => d.prevalence) || 0;
-          const y = d3.scaleLinear()
-            .domain([0, Math.min(0.8, maxPrev * 1.1)])
-            .nice()
-            .range([height - margin.bottom, margin.top]);
-
-          const xAxis = (g) =>
-            g
-              .attr("transform", `translate(0,${height - margin.bottom})`)
-              .call(d3.axisBottom(x).tickSizeOuter(0))
-              .selectAll("text")
-              .style("font-size", "10px")
-              .attr("fill", "#4b5563");
-
-          const yAxis = (g) =>
-            g
-              .attr("transform", `translate(${margin.left},0)`)
-              .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d * 100 + "%"))
-              .selectAll("text")
-              .style("font-size", "10px")
-              .attr("fill", "#4b5563");
-
-          svg.append("g").call(xAxis);
-          svg.append("g").call(yAxis);
-
-          svg
-            .selectAll("rect.bar")
-            .data(rows)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("x", (d) => x(d.key))
-            .attr("y", (d) => y(d.prevalence))
-            .attr("width", x.bandwidth())
-            .attr("height", (d) => y(0) - y(d.prevalence))
-            .attr("fill", (d) =>
-              d.key === "Your profile group" ? bluePalette[0] : bluePalette[3]
-            );
-
-          svg
-            .append("text")
-            .attr("x", margin.left)
-            .attr("y", margin.top + 4)
-            .attr("fill", "#6b7280")
-            .attr("font-size", 10)
-            .text("% of adults with " + condLabel);
-
-          d3
-            .select("#profile-mini-subtitle")
-            .text(
-              `${condLabel} prevalence in your profile group vs. all ${raceLabel} adults and all adults in the sample.`
-            );
-
-          card.classed("visible", true);
-        }
-
-        // -----------------------------------------------------------------
-        // PROFILE TAB LOGIC
-        // -----------------------------------------------------------------
-
-        // Check whether the user has filled in all fields on the profile tab
-        function profileComplete() {
-          const cond = d3.select("#profile-condition").property("value");
-          const age = d3.select("#profile-age").property("value");
-          const sex = d3.select("#profile-sex").property("value");
-          const race = d3.select("#profile-race").property("value");
-          const bmiVal = parseFloat(d3.select("#profile-bmi").property("value"));
-          const income = d3.select("#profile-income").property("value");
-          const educ = d3.select("#profile-education").property("value");
-          return !!(cond && age && sex && race && income && educ && !isNaN(bmiVal));
-        }
-
-        // Main function that updates personalized KPIs, text, and mini-chart
-        function updateProfile() {
-          const summaryEl = d3.select("#profile-summary");
-          const kpiContainer = d3.select("#profile-kpis");
-          const subtitleEl = d3.select("#profile-kpi-subtitle");
-
-          // Clear previous KPIs
-          kpiContainer.selectAll("*").remove();
-
-          // Hide personalized mini chart until we have something meaningful
-          d3.select("#profile-mini-card").classed("visible", false);
-          d3.select("#profile-mini-chart").selectAll("*").remove();
-
-          // If the form isn't complete yet, show instructions & hide summary
-          if (!profileComplete()) {
-            summaryEl.classed("visible", false).html("");
-            subtitleEl.text(
-              "Choose a health issue and fill in the panel on the left to see your estimated risk."
-            );
-            return;
-          }
-
-          const cond = d3.select("#profile-condition").property("value");
-          const condLabel = conditionLabels[cond];
-          const age = d3.select("#profile-age").property("value");
-          const sex = d3.select("#profile-sex").property("value");
-          const race = d3.select("#profile-race").property("value");
-          const bmiVal = parseFloat(d3.select("#profile-bmi").property("value"));
-          const income = d3.select("#profile-income").property("value");
-          const educ = d3.select("#profile-education").property("value");
-
-          subtitleEl.text(condLabel + " among adults most similar to your profile.");
-
-          // Strict matching: same race, sex, age group, income, education, BMI ±3
-          const STRICT_MIN_N = 10;
-
-          const similar = data.filter((d) => {
-            if (d[cond] == null) return false;
-            if (d.age_group !== age) return false;
-            if (d.sex !== sex) return false;
-            if (d.race !== race) return false;
-            if (d.income !== income) return false;
-            if (d.education !== educ) return false;
-            if (d.bmi == null) return false;
-            if (Math.abs(d.bmi - bmiVal) > 3) return false;
-            return true;
-          });
-
-          const nSimilar = similar.length;
-          const strictPrev = nSimilar ? d3.mean(similar, (d) => d[cond]) : null;
-
-          // Baseline prevalence for all adults of the same race (used in both strict + fallback)
-          const baselineGroup = data.filter((d) => d[cond] != null && d.race === race);
-          const baselinePrev = baselineGroup.length
-            ? d3.mean(baselineGroup, (d) => d[cond])
-            : null;
-          const baselinePct = baselinePrev != null ? (baselinePrev * 100).toFixed(1) : null;
-
-          // Overall prevalence in the full sample (for mini-chart context)
-          const overallGroup = data.filter((d) => d[cond] != null);
-          const overallPrev = overallGroup.length
-            ? d3.mean(overallGroup, (d) => d[cond])
-            : null;
-
-          // If strict matching has enough people, we use it directly.
-          if (nSimilar >= STRICT_MIN_N && strictPrev != null && baselinePrev != null) {
-            const pct = (strictPrev * 100).toFixed(1);
-            const ratio = strictPrev / baselinePrev;
-            let relation = "about the same as";
-            if (ratio >= 1.2) relation = "higher than";
-            if (ratio <= 0.8) relation = "lower than";
-
-            const kpis = [
-              {
-                label: "Estimated prevalence in your profile group",
-                value: pct + "%",
-              },
-              {
-                label: `Prevalence among all ${race} adults`,
-                value: baselinePct + "%",
-              },
-              {
-                label: "Number of people with similar profile in sample",
-                value: nSimilar.toLocaleString(),
-              },
-            ];
-
-            const cards = kpiContainer
-              .selectAll(".kpi-card")
-              .data(kpis)
-              .enter()
-              .append("div")
-              .attr("class", "kpi-card");
-
-            cards.append("div").attr("class", "kpi-label").text((d) => d.label);
-            cards.append("div").attr("class", "kpi-value").text((d) => d.value);
-
-            summaryEl
-              .classed("visible", true)
-              .html(`
-                Among <strong class="highlight">${nSimilar.toLocaleString()}</strong> adults in BRFSS 2015 with a profile
-                very similar to yours (same race, sex, age group, income, education, and BMI ±3),
-                about <strong class="highlight">${pct}%</strong> report having
-                <strong class="highlight">${condLabel.toLowerCase()}</strong>.<br><br>
-                Among all <strong>${race}</strong> adults in the survey, about
-                <strong class="highlight">${baselinePct}%</strong> have ${condLabel.toLowerCase()}.
-                This suggests that your estimated risk is <strong class="highlight">${relation}</strong>
-                the average for your race/ethnicity group in this dataset.<br><br>
-                <em>These are rough sample estimates for visualization practice only and do not constitute medical advice.</em>
-              `);
-
-            // Personalized mini-chart using strict prevalence
-            drawProfileMiniChart(condLabel, race, strictPrev, baselinePrev, overallPrev);
-            return;
-          }
-
-          // If strict match is too small, we show a disclaimer and fall back
-          // to a broader group: same age group + race + sex (no BMI/income/education).
-          const fallback = data.filter((d) => {
-            if (d[cond] == null) return false;
-            if (d.age_group !== age) return false;
-            if (d.sex !== sex) return false;
-            if (d.race !== race) return false;
-            return true;
-          });
-
-          const nFallback = fallback.length;
-          const fallbackPrev = nFallback ? d3.mean(fallback, (d) => d[cond]) : null;
-          const fallbackPct =
-            fallbackPrev != null ? (fallbackPrev * 100).toFixed(1) : null;
-
-          const kpisFallback = [];
-
-          // KPI 1: number of strictly matched adults (full profile)
-          kpisFallback.push({
-            label: "Strictly matched adults (full profile)",
-            value: nSimilar.toLocaleString(),
-          });
-
-          // KPI 2: broader group prevalence, if available
-          if (fallbackPct != null) {
-            kpisFallback.push({
-              label: "Prevalence for your age, race, and sex",
-              value: fallbackPct + "%",
-            });
-          }
-
-          // KPI 3: race baseline, if available
-          if (baselinePct != null) {
-            kpisFallback.push({
-              label: `Prevalence among all ${race} adults`,
-              value: baselinePct + "%",
-            });
-          }
-
-          const cardsFb = kpiContainer
-            .selectAll(".kpi-card")
-            .data(kpisFallback)
-            .enter()
-            .append("div")
-            .attr("class", "kpi-card");
-
-          cardsFb.append("div").attr("class", "kpi-label").text((d) => d.label);
-          cardsFb.append("div").attr("class", "kpi-value").text((d) => d.value);
-
-          // Build explanatory text combining disclaimer + broader-group results
-          let text = `
-            We couldn't find enough adults in BRFSS 2015 with a <strong>very similar</strong> profile
-            (same race, sex, age group, income, education, and BMI ±3) to estimate a personalized risk
-            for <strong class="highlight">${condLabel}</strong>. In this dataset, there were only
-            <strong class="highlight">${nSimilar.toLocaleString()}</strong> such adults (we require at least 10).
-            <br><br>
-          `;
-
-          if (fallbackPct != null && baselinePct != null) {
-            const ratioFallback = fallbackPrev / baselinePrev;
-            let fbRelation = "about the same as";
-            if (ratioFallback >= 1.2) fbRelation = "higher than";
-            if (ratioFallback <= 0.8) fbRelation = "lower than";
-
-            text += `
-              However, we can still show results for a <strong>broader group</strong> of adults who match your
-              <strong>age group, race/ethnicity, and sex</strong>:
-              <br><br>
-              • Among <strong class="highlight">${nFallback.toLocaleString()}</strong> ${race.toLowerCase()} ${sex.toLowerCase()} adults
-              in your age group, about <strong class="highlight">${fallbackPct}%</strong> report
-              <strong class="highlight">${condLabel.toLowerCase()}</strong>.<br>
-              • Among all <strong>${race}</strong> adults in the survey (regardless of age or sex),
-              about <strong class="highlight">${baselinePct}%</strong> have
-              ${condLabel.toLowerCase()}.
-              <br><br>
-              This broader group suggests risk that is <strong class="highlight">${fbRelation}</strong>
-              the average for your race/ethnicity group in this dataset.<br><br>
-              <em>These are rough, sample-based estimates meant for visualization practice, not individual medical advice.</em>
-            `;
-          } else {
-            text += `
-              Even with this broader group, there still aren't enough responses with the selected condition
-              to compute a stable estimate. Try switching to the <strong>General Statistics</strong> tab to explore
-              broader patterns across the population.
-            `;
-          }
-
-          summaryEl.classed("visible", true).html(text);
-
-          // Personalized mini-chart for fallback (if we have any prevalence)
-          drawProfileMiniChart(condLabel, race, fallbackPrev, baselinePrev, overallPrev);
-        }
-
-        // -----------------------------------------------------------------
-        // GENERAL STATISTICS TAB LOGIC
-        // -----------------------------------------------------------------
-
-        // Returns the current filtered subset for the Stats tab
-        function getStatsSubset() {
-          const cond = d3.select("#stats-condition").property("value");
-          if (!cond) return [];
-
-          const raceSel = d3.select("#stats-race-filter").property("value");
-          const sexSel = d3.select("#stats-sex-filter").property("value");
-          const incomeSel = d3.select("#stats-income-filter").property("value");
-          const educSel = d3.select("#stats-education-filter").property("value");
-
-          return data.filter((d) => {
-            if (d[cond] == null) return false;
-            if (raceSel !== "all" && d.race !== raceSel) return false;
-            if (sexSel !== "all" && d.sex !== sexSel) return false;
-            if (incomeSel !== "all" && d.income !== incomeSel) return false;
-            if (educSel !== "all" && d.education !== educSel) return false;
-            return true;
-          });
-        }
-
-        // Updates the KPIs + charts on the General Statistics tab
-        function updateStats() {
-          const cond = d3.select("#stats-condition").property("value");
-          const kpiContainer = d3.select("#stats-kpis");
-          const subtitle = d3.select("#stats-kpi-subtitle");
-          kpiContainer.selectAll("*").remove();
-
-          if (!cond) {
-            subtitle.text(
-              "Select a health issue to view prevalence and disparities in the filtered population."
-            );
-            ["#stats-race-chart", "#stats-age-chart", "#stats-bmi-chart"].forEach((id) =>
-              d3.select(id).selectAll("*").remove()
-            );
-            return;
-          }
-
-          const subset = getStatsSubset();
-          subtitle.text(conditionLabels[cond] + " in the filtered population.");
-
-          const total = subset.length;
-          const avgPrev = total ? d3.mean(subset, (d) => d[cond]) : null;
-
-          const any = subset.filter((d) => {
-            const vals = [d.diabetes, d.high_bp, d.high_chol, d.heart_disease, d.stroke];
-            return vals.some((v) => v === 1);
-          });
-          const anyPrev = total ? any.length / total : null;
-
-          const kpis = [
-            { label: "Sample size under filters", value: total.toLocaleString() },
-            {
-              label: `Average prevalence of ${conditionLabels[cond]}`,
-              value: avgPrev != null ? (avgPrev * 100).toFixed(1) + "%" : "N/A",
-            },
-            {
-              label: "Any of the five cardiometabolic conditions",
-              value: anyPrev != null ? (anyPrev * 100).toFixed(1) + "%" : "N/A",
-            },
-          ];
-
-          const cards = kpiContainer
-            .selectAll(".kpi-card")
-            .data(kpis)
-            .enter()
-            .append("div")
-            .attr("class", "kpi-card");
-
-          cards.append("div").attr("class", "kpi-label").text((d) => d.label);
-          cards.append("div").attr("class", "kpi-value").text((d) => d.value);
-
-          // Highlight keys based on the user's profile (only if profile complete
-          // AND both tabs are using the same health condition).
-          let highlightRaceKey = null;
-          let highlightAgeKey = null;
-          let highlightBmiKey = null; // BMI highlight is optional; kept for future extension
-
-          if (profileComplete() &&
-              d3.select("#profile-condition").property("value") === cond) {
-            highlightRaceKey = d3.select("#profile-race").property("value") || null;
-            highlightAgeKey = d3.select("#profile-age").property("value") || null;
-            // For BMI highlight, we would need to map numeric BMI to the bmi_cat labels
-            // used in the data (e.g., "Underweight", "Normal", "Overweight", "Obese").
-            // That mapping can vary, so we keep this off by default to avoid misleading users.
-          }
-
-          // Race chart: categorical bar chart, with your race highlighted and clickable
-          const byRace = prevalenceBy("race", cond, subset);
-          drawBarChart("#stats-race-chart", byRace, {
-            yLabel: "% with " + conditionLabels[cond],
-            rotateX: true,
-            highlightKey: highlightRaceKey,
-            focusKeyName: "race",
-          });
-
-          // Age chart: categorical bar chart over ordered age groups
-          const byAge = prevalenceBy("age_group", cond, subset);
-          drawBarChart("#stats-age-chart", byAge, {
-            yLabel: "% with " + conditionLabels[cond],
-            highlightKey: highlightAgeKey,
-            focusKeyName: "age",
-          });
-
-          // BMI chart: categorical bar chart by BMI category
-          const byBmi = prevalenceBy("bmi_cat", cond, subset);
-          drawBarChart("#stats-bmi-chart", byBmi, {
-            yLabel: "% with " + conditionLabels[cond],
-            highlightKey: highlightBmiKey,
-            focusKeyName: "bmi",
-          });
-        }
-
-        // -----------------------------------------------------------------
-        // Sync condition between tabs so user doesn't have to pick twice
-        // -----------------------------------------------------------------
-        function syncConditions(fromProfile) {
-          const profileVal = d3.select("#profile-condition").property("value");
-          const statsVal = d3.select("#stats-condition").property("value");
-          if (fromProfile && profileVal && profileVal !== statsVal) {
-            d3.select("#stats-condition").property("value", profileVal);
-          }
-          if (!fromProfile && statsVal && statsVal !== profileVal) {
-            d3.select("#profile-condition").property("value", statsVal);
-          }
-        }
-
-        // -----------------------------------------------------------------
-        // Hook up event listeners for both tabs
-        // -----------------------------------------------------------------
-
-        // Whenever any profile input changes:
-        d3.selectAll(
-          "#profile-condition, #profile-age, #profile-sex, #profile-race, #profile-bmi, #profile-income, #profile-education"
-        ).on("change", function () {
-          if (this.id === "profile-condition") {
-            syncConditions(true);
-            updateStats();
-          }
-          updateProfile();
-        });
-
-        // Whenever any filter on the General Statistics tab changes:
-        d3.selectAll(
-          "#stats-condition, #stats-race-filter, #stats-sex-filter, #stats-income-filter, #stats-education-filter"
-        ).on("change", function () {
-          if (this.id === "stats-condition") {
-            syncConditions(false);
-            updateProfile();
-          }
-          updateStats();
-        });
-
-        // Initial blank state for both tabs
-        updateProfile();
-        updateStats();
-      })
-      .catch((err) => {
-        console.error("Error loading CSV:", err);
-        alert(
-          "Error loading brfss2015_health_clean.csv. Make sure it is in the same folder as index.html."
-        );
+        const p = d.prevalence;
+        const n = d.total;
+        const z = 1.96;
+        const se = Math.sqrt(p * (1 - p) / n);
+        const low = Math.max(0, p - z * se);
+        const high = Math.min(1, p + z * se);
+        return { ...d, ciLow: low, ciHigh: high };
       });
-  </script>
+
+      const x = d3.scaleBand()
+        .domain(points.map((d) => d.key))
+        .range([margin.left, width - margin.right])
+        .padding(0.25);
+
+      const maxForScale =
+        d3.max(points, (d) => (d.ciHigh != null ? d.ciHigh : d.prevalence)) || 0;
+      const yMax = maxForScale === 0 ? 0.1 : maxForScale * 1.1;
+
+      const y = d3.scaleLinear()
+        .domain([0, yMax])
+        .nice()
+        .range([height - margin.bottom, margin.top]);
+
+      const xAxis = (g) =>
+        g
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x).tickSizeOuter(0))
+          .selectAll("text")
+          .style("font-size", "10px")
+          .attr("fill", "#4b5563")
+          .call((sel) => {
+            if (rotateX) {
+              sel
+                .attr("text-anchor", "end")
+                .attr("transform", "rotate(-35)")
+                .attr("dx", "-0.6em")
+                .attr("dy", "0.25em");
+            }
+          });
+
+      const yAxis = (g) =>
+        g
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(
+            d3.axisLeft(y)
+              .ticks(5)
+              .tickFormat((d) => (d * 100).toFixed(0) + "%")
+          )
+          .selectAll("text")
+          .style("font-size", "10px")
+          .attr("fill", "#4b5563");
+
+      svg.append("g").call(xAxis);
+      svg.append("g").call(yAxis);
+
+      const bars = svg
+        .selectAll("rect.bar")
+        .data(points)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", (d) => x(d.key))
+        .attr("y", (d) => y(d.prevalence))
+        .attr("width", x.bandwidth())
+        .attr("height", (d) => y(0) - y(d.prevalence))
+        .attr("fill", (d) => {
+          const isHighlight = highlightKey && d.key === highlightKey;
+          return isHighlight ? bluePalette[0] : bluePalette[3];
+        })
+        .attr("opacity", (d) => {
+          if (!focusKey) return 1;
+          return d.key === focusKey ? 1 : 0.25;
+        });
+
+      // Clicking a bar focuses on that group; clicking again resets.
+      if (focusKeyName) {
+        bars
+          .style("cursor", "pointer")
+          .on("mouseover", function (_, d) {
+            d3.select(this).attr("fill", bluePalette[4]);
+          })
+          .on("mouseout", function (_, d) {
+            const isHighlight = highlightKey && d.key === highlightKey;
+            d3.select(this).attr("fill", isHighlight ? bluePalette[0] : bluePalette[3]);
+          })
+          .on("click", (_, d) => {
+            focusState[focusKeyName] =
+              focusState[focusKeyName] === d.key ? null : d.key;
+            updateStats();
+          });
+      }
+
+      // Error bars for CI
+      if (showCI) {
+        const ciData = points.filter((d) => d.ciLow != null && d.ciHigh != null);
+
+        const ciGroup = svg.append("g").attr("class", "ci-group");
+
+        ciGroup
+          .selectAll("line.ci")
+          .data(ciData)
+          .enter()
+          .append("line")
+          .attr("class", "ci")
+          .attr("x1", (d) => x(d.key) + x.bandwidth() / 2)
+          .attr("x2", (d) => x(d.key) + x.bandwidth() / 2)
+          .attr("y1", (d) => y(d.ciLow))
+          .attr("y2", (d) => y(d.ciHigh))
+          .attr("stroke", "#374151")
+          .attr("stroke-width", 1);
+
+        ciGroup
+          .selectAll("line.ci-cap-top")
+          .data(ciData)
+          .enter()
+          .append("line")
+          .attr("class", "ci-cap-top")
+          .attr("x1", (d) => x(d.key) + x.bandwidth() * 0.2)
+          .attr("x2", (d) => x(d.key) + x.bandwidth() * 0.8)
+          .attr("y1", (d) => y(d.ciHigh))
+          .attr("y2", (d) => y(d.ciHigh))
+          .attr("stroke", "#374151")
+          .attr("stroke-width", 1);
+
+        ciGroup
+          .selectAll("line.ci-cap-bottom")
+          .data(ciData)
+          .enter()
+          .append("line")
+          .attr("class", "ci-cap-bottom")
+          .attr("x1", (d) => x(d.key) + x.bandwidth() * 0.2)
+          .attr("x2", (d) => x(d.key) + x.bandwidth() * 0.8)
+          .attr("y1", (d) => y(d.ciLow))
+          .attr("y2", (d) => y(d.ciLow))
+          .attr("stroke", "#374151")
+          .attr("stroke-width", 1);
+      }
+
+      svg
+        .append("text")
+        .attr("x", margin.left)
+        .attr("y", margin.top + 4)
+        .attr("fill", "#6b7280")
+        .attr("font-size", 10)
+        .text(yLabel);
+    }
+
+    // -----------------------------------------------------------------
+    // Small personalized chart for the profile tab
+    // Compares: your profile group vs. your race group vs. all adults
+    // -----------------------------------------------------------------
+    function drawProfileMiniChart(condLabel, raceLabel, profilePrev, baselinePrev, overallPrev) {
+      const card = d3.select("#profile-mini-card");
+      const container = d3.select("#profile-mini-chart");
+      container.selectAll("*").remove();
+
+      if (profilePrev == null && baselinePrev == null && overallPrev == null) {
+        card.classed("visible", false);
+        return;
+      }
+
+      const rows = [];
+      if (profilePrev != null) {
+        rows.push({ key: "Your profile group", prevalence: profilePrev });
+      }
+      if (baselinePrev != null) {
+        rows.push({
+          key: `All ${raceLabel} adults`,
+          prevalence: baselinePrev,
+        });
+      }
+      if (overallPrev != null) {
+        rows.push({ key: "All adults", prevalence: overallPrev });
+      }
+
+      const width = container.node().clientWidth || 400;
+      const height = container.node().clientHeight || 180;
+      const margin = { top: 16, right: 16, bottom: 40, left: 56 };
+
+      const svg = container.append("svg").attr("width", width).attr("height", height);
+
+      const x = d3.scaleBand()
+        .domain(rows.map((d) => d.key))
+        .range([margin.left, width - margin.right])
+        .padding(0.35);
+
+      const maxPrev = d3.max(rows, (d) => d.prevalence) || 0;
+      const yMax = maxPrev === 0 ? 0.1 : maxPrev * 1.1;
+
+      const y = d3.scaleLinear()
+        .domain([0, yMax])
+        .nice()
+        .range([height - margin.bottom, margin.top]);
+
+      const xAxis = (g) =>
+        g
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x).tickSizeOuter(0))
+          .selectAll("text")
+          .style("font-size", "10px")
+          .attr("fill", "#4b5563");
+
+      const yAxis = (g) =>
+        g
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(
+            d3.axisLeft(y)
+              .ticks(4)
+              .tickFormat((d) => (d * 100).toFixed(0) + "%")
+          )
+          .selectAll("text")
+          .style("font-size", "10px")
+          .attr("fill", "#4b5563");
+
+      svg.append("g").call(xAxis);
+      svg.append("g").call(yAxis);
+
+      svg
+        .selectAll("rect.bar")
+        .data(rows)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", (d) => x(d.key))
+        .attr("y", (d) => y(d.prevalence))
+        .attr("width", x.bandwidth())
+        .attr("height", (d) => y(0) - y(d.prevalence))
+        .attr("fill", (d) =>
+          d.key === "Your profile group" ? bluePalette[0] : bluePalette[3]
+        );
+
+      svg
+        .append("text")
+        .attr("x", margin.left)
+        .attr("y", margin.top + 4)
+        .attr("fill", "#6b7280")
+        .attr("font-size", 10)
+        .text("% of adults with " + condLabel);
+
+      d3
+        .select("#profile-mini-subtitle")
+        .text(
+          `${condLabel} prevalence in your profile group vs. all ${raceLabel} adults and all adults in the sample.`
+        );
+
+      card.classed("visible", true);
+    }
+
+    // -----------------------------------------------------------------
+    // PROFILE TAB LOGIC
+    // -----------------------------------------------------------------
+
+    // Check whether the user has filled in all fields on the profile tab
+    function profileComplete() {
+      const cond = d3.select("#profile-condition").property("value");
+      const age = d3.select("#profile-age").property("value");
+      const sex = d3.select("#profile-sex").property("value");
+      const race = d3.select("#profile-race").property("value");
+      const bmiVal = parseFloat(d3.select("#profile-bmi").property("value"));
+      const income = d3.select("#profile-income").property("value");
+      const educ = d3.select("#profile-education").property("value");
+      return !!(cond && age && sex && race && income && educ && !isNaN(bmiVal));
+    }
+
+    // Main function that updates personalized KPIs, text, and mini-chart
+    function updateProfile() {
+      const summaryEl = d3.select("#profile-summary");
+      const kpiContainer = d3.select("#profile-kpis");
+      const subtitleEl = d3.select("#profile-kpi-subtitle");
+
+      // Clear previous KPIs
+      kpiContainer.selectAll("*").remove();
+
+      // Hide personalized mini chart until we have something meaningful
+      d3.select("#profile-mini-card").classed("visible", false);
+      d3.select("#profile-mini-chart").selectAll("*").remove();
+
+      // If the form isn't complete yet, show instructions & hide summary
+      if (!profileComplete()) {
+        summaryEl.classed("visible", false).html("");
+        subtitleEl.text(
+          "Choose a health issue and fill in the panel on the left to see your estimated risk."
+        );
+        return;
+      }
+
+      const cond = d3.select("#profile-condition").property("value");
+      const condLabel = conditionLabels[cond];
+      const age = d3.select("#profile-age").property("value");
+      const sex = d3.select("#profile-sex").property("value");
+      const race = d3.select("#profile-race").property("value");
+      const bmiVal = parseFloat(d3.select("#profile-bmi").property("value"));
+      const income = d3.select("#profile-income").property("value");
+      const educ = d3.select("#profile-education").property("value");
+
+      subtitleEl.text(condLabel + " among adults most similar to your profile.");
+
+      // Strict matching: same race, sex, age group, income, education, BMI ±3
+      const STRICT_MIN_N = 10;
+
+      const similar = data.filter((d) => {
+        if (d[cond] == null) return false;
+        if (d.age_group !== age) return false;
+        if (d.sex !== sex) return false;
+        if (d.race !== race) return false;
+        if (d.income !== income) return false;
+        if (d.education !== educ) return false;
+        if (d.bmi == null) return false;
+        if (Math.abs(d.bmi - bmiVal) > 3) return false;
+        return true;
+      });
+
+      const nSimilar = similar.length;
+      const strictPrev = nSimilar ? d3.mean(similar, (d) => d[cond]) : null;
+
+      // Baseline prevalence for all adults of the same race (used in both strict + fallback)
+      const baselineGroup = data.filter((d) => d[cond] != null && d.race === race);
+      const baselinePrev = baselineGroup.length
+        ? d3.mean(baselineGroup, (d) => d[cond])
+        : null;
+      const baselinePct = baselinePrev != null ? (baselinePrev * 100).toFixed(1) : null;
+
+      // Overall prevalence in the full sample (for mini-chart context)
+      const overallGroup = data.filter((d) => d[cond] != null);
+      const overallPrev = overallGroup.length
+        ? d3.mean(overallGroup, (d) => d[cond])
+        : null;
+
+      // If strict matching has enough people, we use it directly.
+      if (nSimilar >= STRICT_MIN_N && strictPrev != null && baselinePrev != null) {
+        const pct = (strictPrev * 100).toFixed(1);
+        const ratio = strictPrev / baselinePrev;
+        let relation = "about the same as";
+        if (ratio >= 1.2) relation = "higher than";
+        if (ratio <= 0.8) relation = "lower than";
+
+        const kpis = [
+          {
+            label: "Estimated prevalence in your profile group",
+            value: pct + "%",
+          },
+          {
+            label: `Prevalence among all ${race} adults`,
+            value: baselinePct + "%",
+          },
+          {
+            label: "Number of people with similar profile in sample",
+            value: nSimilar.toLocaleString(),
+          },
+        ];
+
+        const cards = kpiContainer
+          .selectAll(".kpi-card")
+          .data(kpis)
+          .enter()
+          .append("div")
+          .attr("class", "kpi-card");
+
+        cards.append("div").attr("class", "kpi-label").text((d) => d.label);
+        cards.append("div").attr("class", "kpi-value").text((d) => d.value);
+
+        summaryEl
+          .classed("visible", true)
+          .html(`
+            Among <strong class="highlight">${nSimilar.toLocaleString()}</strong> adults in BRFSS 2015 with a profile
+            very similar to yours (same race, sex, age group, income, education, and BMI ±3),
+            about <strong class="highlight">${pct}%</strong> report having
+            <strong class="highlight">${condLabel.toLowerCase()}</strong>.<br><br>
+            Among all <strong>${race}</strong> adults in the survey, about
+            <strong class="highlight">${baselinePct}%</strong> have ${condLabel.toLowerCase()}.
+            This suggests that your estimated risk is <strong class="highlight">${relation}</strong>
+            the average for your race/ethnicity group in this dataset.<br><br>
+            <em>These are rough sample estimates for visualization practice only and do not constitute medical advice.</em>
+          `);
+
+        // Personalized mini-chart using strict prevalence
+        drawProfileMiniChart(condLabel, race, strictPrev, baselinePrev, overallPrev);
+        return;
+      }
+
+      // If strict match is too small, we show a disclaimer and fall back
+      // to a broader group: same age group + race + sex (no BMI/income/education).
+      const fallback = data.filter((d) => {
+        if (d[cond] == null) return false;
+        if (d.age_group !== age) return false;
+        if (d.sex !== sex) return false;
+        if (d.race !== race) return false;
+        return true;
+      });
+
+      const nFallback = fallback.length;
+      const fallbackPrev = nFallback ? d3.mean(fallback, (d) => d[cond]) : null;
+      const fallbackPct =
+        fallbackPrev != null ? (fallbackPrev * 100).toFixed(1) : null;
+
+      const kpisFallback = [];
+
+      // KPI 1: number of strictly matched adults (full profile)
+      kpisFallback.push({
+        label: "Strictly matched adults (full profile)",
+        value: nSimilar.toLocaleString(),
+      });
+
+      // KPI 2: broader group prevalence, if available
+      if (fallbackPct != null) {
+        kpisFallback.push({
+          label: "Prevalence for your age, race, and sex",
+          value: fallbackPct + "%",
+        });
+      }
+
+      // KPI 3: race baseline, if available
+      if (baselinePct != null) {
+        kpisFallback.push({
+          label: `Prevalence among all ${race} adults`,
+          value: baselinePct + "%",
+        });
+      }
+
+      const cardsFb = kpiContainer
+        .selectAll(".kpi-card")
+        .data(kpisFallback)
+        .enter()
+        .append("div")
+        .attr("class", "kpi-card");
+
+      cardsFb.append("div").attr("class", "kpi-label").text((d) => d.label);
+      cardsFb.append("div").attr("class", "kpi-value").text((d) => d.value);
+
+      // Build explanatory text combining disclaimer + broader-group results
+      let text = `
+        We couldn't find enough adults in BRFSS 2015 with a <strong>very similar</strong> profile
+        (same race, sex, age group, income, education, and BMI ±3) to estimate a personalized risk
+        for <strong class="highlight">${condLabel}</strong>. In this dataset, there were only
+        <strong class="highlight">${nSimilar.toLocaleString()}</strong> such adults (we require at least 10).
+        <br><br>
+      `;
+
+      if (fallbackPct != null && baselinePct != null) {
+        const ratioFallback = fallbackPrev / baselinePrev;
+        let fbRelation = "about the same as";
+        if (ratioFallback >= 1.2) fbRelation = "higher than";
+        if (ratioFallback <= 0.8) fbRelation = "lower than";
+
+        text += `
+          However, we can still show results for a <strong>broader group</strong> of adults who match your
+          <strong>age group, race/ethnicity, and sex</strong>:
+          <br><br>
+          • Among <strong class="highlight">${nFallback.toLocaleString()}</strong> ${race.toLowerCase()} ${sex.toLowerCase()} adults
+          in your age group, about <strong class="highlight">${fallbackPct}%</strong> report
+          <strong class="highlight">${condLabel.toLowerCase()}</strong>.<br>
+          • Among all <strong>${race}</strong> adults in the survey (regardless of age or sex),
+          about <strong class="highlight">${baselinePct}%</strong> have
+          ${condLabel.toLowerCase()}.
+          <br><br>
+          This broader group suggests risk that is <strong class="highlight">${fbRelation}</strong>
+          the average for your race/ethnicity group in this dataset.<br><br>
+          <em>These are rough, sample-based estimates meant for visualization practice, not individual medical advice.</em>
+        `;
+      } else {
+        text += `
+          Even with this broader group, there still aren't enough responses with the selected condition
+          to compute a stable estimate. Try switching to the <strong>General Statistics</strong> tab to explore
+          broader patterns across the population.
+        `;
+      }
+
+      summaryEl.classed("visible", true).html(text);
+
+      // Personalized mini-chart for fallback (if we have any prevalence)
+      drawProfileMiniChart(condLabel, race, fallbackPrev, baselinePrev, overallPrev);
+    }
+
+    // -----------------------------------------------------------------
+    // GENERAL STATISTICS TAB LOGIC
+    // -----------------------------------------------------------------
+
+    // Returns the current filtered subset for the Stats tab
+    function getStatsSubset() {
+      const cond = d3.select("#stats-condition").property("value");
+      if (!cond) return [];
+
+      const raceSel = d3.select("#stats-race-filter").property("value");
+      const sexSel = d3.select("#stats-sex-filter").property("value");
+      const incomeSel = d3.select("#stats-income-filter").property("value");
+      const educSel = d3.select("#stats-education-filter").property("value");
+
+      return data.filter((d) => {
+        if (d[cond] == null) return false;
+        if (raceSel !== "all" && d.race !== raceSel) return false;
+        if (sexSel !== "all" && d.sex !== sexSel) return false;
+        if (incomeSel !== "all" && d.income !== incomeSel) return false;
+        if (educSel !== "all" && d.education !== educSel) return false;
+        return true;
+      });
+    }
+
+    // Updates the KPIs + charts on the General Statistics tab
+    function updateStats() {
+      const cond = d3.select("#stats-condition").property("value");
+      const kpiContainer = d3.select("#stats-kpis");
+      const subtitle = d3.select("#stats-kpi-subtitle");
+      kpiContainer.selectAll("*").remove();
+
+      if (!cond) {
+        subtitle.text(
+          "Select a health issue to view prevalence and disparities in the filtered population."
+        );
+        ["#stats-race-chart", "#stats-age-chart", "#stats-bmi-chart"].forEach((id) =>
+          d3.select(id).selectAll("*").remove()
+        );
+        return;
+      }
+
+      const subset = getStatsSubset();
+      subtitle.text(conditionLabels[cond] + " in the filtered population.");
+
+      const total = subset.length;
+      const avgPrev = total ? d3.mean(subset, (d) => d[cond]) : null;
+
+      const any = subset.filter((d) => {
+        const vals = [d.diabetes, d.high_bp, d.high_chol, d.heart_disease, d.stroke];
+        return vals.some((v) => v === 1);
+      });
+      const anyPrev = total ? any.length / total : null;
+
+      const kpis = [
+        { label: "Sample size under filters", value: total.toLocaleString() },
+        {
+          label: `Average prevalence of ${conditionLabels[cond]}`,
+          value: avgPrev != null ? (avgPrev * 100).toFixed(1) + "%" : "N/A",
+        },
+        {
+          label: "Any of the five cardiometabolic conditions",
+          value: anyPrev != null ? (anyPrev * 100).toFixed(1) + "%" : "N/A",
+        },
+      ];
+
+      const cards = kpiContainer
+        .selectAll(".kpi-card")
+        .data(kpis)
+        .enter()
+        .append("div")
+        .attr("class", "kpi-card");
+
+      cards.append("div").attr("class", "kpi-label").text((d) => d.label);
+      cards.append("div").attr("class", "kpi-value").text((d) => d.value);
+
+      // Highlight keys based on the user's profile (only if profile complete
+      // AND both tabs are using the same health condition).
+      let highlightRaceKey = null;
+      let highlightAgeKey = null;
+      let highlightBmiKey = null; // BMI highlight is optional; kept for future extension
+
+      if (
+        profileComplete() &&
+        d3.select("#profile-condition").property("value") === cond
+      ) {
+        highlightRaceKey = d3.select("#profile-race").property("value") || null;
+        highlightAgeKey = d3.select("#profile-age").property("value") || null;
+        // BMI highlight left off intentionally to avoid misleading mapping
+      }
+
+      // Race chart: categorical bar chart, with your race highlighted and clickable
+      const byRace = prevalenceBy("race", cond, subset);
+      drawBarChart("#stats-race-chart", byRace, {
+        yLabel: "% with " + conditionLabels[cond],
+        rotateX: true,
+        highlightKey: highlightRaceKey,
+        focusKeyName: "race",
+      });
+
+      // Age chart: categorical bar chart over ordered age groups
+      const byAge = prevalenceBy("age_group", cond, subset);
+      drawBarChart("#stats-age-chart", byAge, {
+        yLabel: "% with " + conditionLabels[cond],
+        highlightKey: highlightAgeKey,
+        focusKeyName: "age",
+      });
+
+      // BMI chart: categorical bar chart by BMI category
+      const byBmi = prevalenceBy("bmi_cat", cond, subset);
+      drawBarChart("#stats-bmi-chart", byBmi, {
+        yLabel: "% with " + conditionLabels[cond],
+        highlightKey: highlightBmiKey,
+        focusKeyName: "bmi",
+      });
+    }
+
+    // -----------------------------------------------------------------
+    // Sync condition between tabs so user doesn't have to pick twice
+    // -----------------------------------------------------------------
+    function syncConditions(fromProfile) {
+      const profileVal = d3.select("#profile-condition").property("value");
+      const statsVal = d3.select("#stats-condition").property("value");
+      if (fromProfile && profileVal && profileVal !== statsVal) {
+        d3.select("#stats-condition").property("value", profileVal);
+      }
+      if (!fromProfile && statsVal && statsVal !== profileVal) {
+        d3.select("#profile-condition").property("value", statsVal);
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // Hook up event listeners for both tabs
+    // -----------------------------------------------------------------
+
+    // Profile inputs
+    d3.selectAll(
+      "#profile-condition, #profile-age, #profile-sex, #profile-race, #profile-bmi, #profile-income, #profile-education"
+    ).on("change", function () {
+      if (this.id === "profile-condition") {
+        syncConditions(true);
+        updateStats();
+      }
+      updateProfile();
+    });
+
+    // General Statistics filters
+    d3.selectAll(
+      "#stats-condition, #stats-race-filter, #stats-sex-filter, #stats-income-filter, #stats-education-filter"
+    ).on("change", function () {
+      if (this.id === "stats-condition") {
+        syncConditions(false);
+        updateProfile();
+      }
+      updateStats();
+    });
+
+    // CI toggle checkbox
+    const ciToggleEl = document.getElementById("ci-toggle");
+    if (ciToggleEl) {
+      ciToggleEl.addEventListener("change", (e) => {
+        showCI = e.target.checked;
+        updateStats();
+      });
+    }
+
+    // Initial blank state for both tabs
+    updateProfile();
+    updateStats();
+  })
+  .catch((err) => {
+    console.error("Error loading CSV:", err);
+    alert(
+      "Error loading brfss2015_health_clean.csv. Make sure it is in the same folder as index.html."
+    );
+  });
+</script>
 </body>
 </html>
